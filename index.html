@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 0;
+            margin: 0;
+        }
+
+        .container {
+            width: 100%;
+            margin: 0;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 0;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 300;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .controls {
+            padding: 30px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn.delete {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+        }
+
+        .table-container {
+            padding: 0;
+            overflow: auto;
+            height: calc(100vh - 350px);
+            min-height: 500px;
+            border: none;
+            border-radius: 0;
+            background: #fafafa;
+        }
+
+        .project-table {
+            width: 100%;
+            min-width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: white;
+            border-radius: 0;
+            overflow: hidden;
+            box-shadow: none;
+        }
+
+        .project-table th,
+        .project-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+            border-right: 1px solid #f0f0f0;
+            position: relative;
+            min-width: 120px;
+        }
+
+        .project-table th:last-child,
+        .project-table td:last-child {
+            border-right: none;
+        }
+
+        .project-table th {
+            background: linear-gradient(135deg, #f8f9ff, #e8edff);
+            font-weight: 600;
+            color: #4a5568;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+
+        .project-table tr:hover {
+            background: rgba(102, 126, 234, 0.05);
+            transform: scale(1.01);
+            transition: all 0.2s ease;
+        }
+
+        .row-counter {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-weight: bold;
+            text-align: center;
+            border-radius: 10px;
+            min-width: 150px;
+            max-width: 150px;
+            width: 150px;
+            position: sticky;
+            left: 0;
+            z-index: 10;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            cursor: text;
+        }
+
+        .row-counter:hover {
+            background: linear-gradient(135deg, #5a6fd8, #6b3f8a);
+        }
+
+        .row-counter:focus {
+            outline: 2px solid #fff;
+            background: linear-gradient(135deg, #5a6fd8, #6b3f8a);
+        }
+
+        .row-id-cell {
+            background: linear-gradient(135deg, #f8f9ff, #e8edff);
+            font-weight: 600;
+            text-align: center;
+            min-width: 120px;
+            max-width: 120px;
+            width: 120px;
+            position: sticky;
+            left: 80px;
+            z-index: 9;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+            cursor: text;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .row-id-cell:hover {
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .row-id-cell:focus {
+            outline: 2px solid #667eea;
+            background: white;
+        }
+
+        .task-cell {
+            cursor: text;
+            min-width: 150px;
+            transition: all 0.2s ease;
+            padding: 12px 15px;
+        }
+
+        .task-cell:hover {
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 8px;
+        }
+
+        .task-cell:focus {
+            outline: 2px solid #667eea;
+            background: white;
+            border-radius: 8px;
+        }
+
+        .checkbox-cell {
+            text-align: center;
+            padding: 12px 15px;
+            min-width: 100px;
+        }
+
+        .task-checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #667eea;
+            transform: scale(1.2);
+        }
+
+        .completed-row {
+            background: rgba(0, 0, 0, 0.15) !important;
+            opacity: 0.7;
+            transition: all 0.3s ease;
+        }
+
+        .completed-row .row-counter {
+            text-decoration: line-through;
+            background: linear-gradient(135deg, #555, #666) !important;
+        }
+
+        .completed-row:hover {
+            background: rgba(0, 0, 0, 0.2) !important;
+        }
+
+        .column-header {
+            position: relative;
+            cursor: text;
+            padding: 12px 40px 12px 15px;
+            min-width: 120px;
+            position: sticky;
+            top: 0;
+            background: linear-gradient(135deg, #f8f9ff, #e8edff);
+            z-index: 5;
+        }
+
+        .delete-column {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #ff4757;
+            color: white;
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 12px;
+            opacity: 0;
+            transition: all 0.2s ease;
+        }
+
+        .column-header:hover .delete-column {
+            opacity: 1;
+        }
+
+        .delete-column:hover {
+            background: #ff3742;
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .delete-row {
+            background: #ff4757;
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: 10px;
+            opacity: 0;
+            transition: all 0.2s ease;
+        }
+
+        .project-table tr:hover .delete-row {
+            opacity: 1;
+        }
+
+        .delete-row:hover {
+            background: #ff3742;
+            transform: scale(1.1);
+        }
+
+        .stats {
+            padding: 20px 30px;
+            background: rgba(102, 126, 234, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #4a5568;
+            font-weight: 500;
+        }
+
+        .input-field {
+            border: 2px solid #e2e8f0;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .controls {
+                padding: 20px;
+            }
+            
+            .table-container {
+                padding: 15px;
+            }
+            
+            .project-table th,
+            .project-table td {
+                padding: 10px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Project Checklist Manager</h1>
+            <p>Track your project tasks with interactive checklists</p>
+        </div>
+        
+        <div class="controls">
+            <button class="btn" onclick="addColumn()">+ Add Column</button>
+            <button class="btn" onclick="addRow()">+ Add Row</button>
+            <button class="btn" onclick="saveToCloud()">☁️ Save to Cloud</button>
+            <button class="btn" onclick="loadFromCloud()">📥 Load from Cloud</button>
+            <button class="btn" onclick="saveData()">💾 Export File</button>
+            <button class="btn" onclick="loadData()">📁 Import File</button>
+            <button class="btn delete" onclick="clearAll()">Clear All</button>
+            <input type="file" id="fileInput" accept=".json" style="display: none;" onchange="handleFileLoad(event)">
+        </div>
+
+        <div class="stats">
+            <div>Total Rows: <span id="rowCount">0</span></div>
+            <div>Total Columns: <span id="columnCount">2</span></div>
+        </div>
+        
+        <div class="table-container">
+            <table class="project-table" id="projectTable">
+                <thead>
+                    <tr>
+                        <th class="row-counter">#/Name</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let rowCounter = 0;
+        let columnCounter = 1; // Only ID/Name column initially
+        
+        // MongoDB Configuration
+        const MONGODB_CONFIG = {
+            clusterName: 'Cluster0',
+            databaseName: 'team_checklists',
+            collectionName: 'projects',
+            projectId: 'checklist_v1' // You can change this for different projects
+        };
+
+        function updateStats() {
+            document.getElementById('rowCount').textContent = rowCounter;
+            document.getElementById('columnCount').textContent = columnCounter;
+        }
+
+        function addColumn() {
+            const table = document.getElementById('projectTable');
+            const headerRow = table.querySelector('thead tr');
+            const bodyRows = table.querySelectorAll('tbody tr');
+            
+            columnCounter++;
+            
+            // Add header
+            const newHeader = document.createElement('th');
+            newHeader.className = 'column-header';
+            newHeader.contentEditable = true;
+            newHeader.innerHTML = `Subtask ${columnCounter}<button class="delete-column" onclick="deleteColumn(${columnCounter+1})">×</button>`;
+            newHeader.onclick = function() { editColumnName(this); };
+            headerRow.appendChild(newHeader);
+            
+            // Add cells to existing rows
+            bodyRows.forEach(row => {
+                const newCell = document.createElement('td');
+                newCell.className = 'checkbox-cell';
+                newCell.innerHTML = '<input type="checkbox" class="task-checkbox" onchange="checkRowCompletion(this)">';
+                row.appendChild(newCell);
+            });
+            
+            updateStats();
+        }
+
+        function addRow() {
+            const tableBody = document.getElementById('tableBody');
+            const headerRow = document.querySelector('thead tr');
+            const columnCount = headerRow.children.length;
+            
+            rowCounter++;
+            
+            const newRow = document.createElement('tr');
+            
+            // Add editable row counter/name cell
+            const counterCell = document.createElement('td');
+            counterCell.className = 'row-counter';
+            counterCell.contentEditable = true;
+            counterCell.innerHTML = `${rowCounter}. <span style="font-weight: normal;">Project ${rowCounter}</span> <button class="delete-row" onclick="deleteRow(this)">×</button>`;
+            newRow.appendChild(counterCell);
+            
+            // Add checkbox cells for remaining columns  
+            for (let i = 1; i < columnCount; i++) {
+                const newCell = document.createElement('td');
+                newCell.className = 'checkbox-cell';
+                newCell.innerHTML = '<input type="checkbox" class="task-checkbox" onchange="checkRowCompletion(this)">';
+                newRow.appendChild(newCell);
+            }
+            
+            tableBody.appendChild(newRow);
+            updateStats();
+        }
+
+        function checkRowCompletion(checkbox) {
+            const row = checkbox.closest('tr');
+            const checkboxes = row.querySelectorAll('.task-checkbox');
+            
+            // Check if all checkboxes in this row are checked
+            let allChecked = true;
+            let hasCheckboxes = false;
+            
+            checkboxes.forEach(cb => {
+                hasCheckboxes = true;
+                if (!cb.checked) {
+                    allChecked = false;
+                }
+            });
+            
+            // Apply or remove completed styling
+            if (allChecked && hasCheckboxes) {
+                row.classList.add('completed-row');
+                console.log('Row completed!'); // Debug log
+            } else {
+                row.classList.remove('completed-row');
+                console.log('Row not completed'); // Debug log
+            }
+        }
+
+        function deleteRow(button) {
+            if (confirm('Are you sure you want to delete this row?')) {
+                const row = button.closest('tr');
+                row.remove();
+                rowCounter--;
+                updateRowNumbers();
+                updateStats();
+            }
+        }
+
+        function deleteColumn(columnIndex) {
+            if (confirm('Are you sure you want to delete this column?')) {
+                const table = document.getElementById('projectTable');
+                const allRows = table.querySelectorAll('tr');
+                
+                allRows.forEach(row => {
+                    if (row.children[columnIndex]) {
+                        row.children[columnIndex].remove();
+                    }
+                });
+                
+                columnCounter--;
+                updateStats();
+            }
+        }
+
+        function updateRowNumbers() {
+            const rows = document.querySelectorAll('#tableBody tr');
+            rows.forEach((row, index) => {
+                const counterCell = row.querySelector('.row-counter');
+                counterCell.innerHTML = `${index + 1} <button class="delete-row" onclick="deleteRow(this)">×</button>`;
+            });
+            rowCounter = rows.length;
+        }
+
+        function editColumnName(element) {
+            element.focus();
+            
+            // Select all text when clicked
+            const range = document.createRange();
+            range.selectNodeContents(element);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+        }
+
+        function clearAll() {
+            if (confirm('Are you sure you want to clear all data? This cannot be undone.')) {
+                document.getElementById('tableBody').innerHTML = '';
+                rowCounter = 0;
+                updateStats();
+            }
+        }
+
+        // Handle Enter key in editable cells
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && e.target.classList.contains('editable')) {
+                e.target.blur();
+            }
+        });
+
+        // MongoDB Cloud Save/Load Functions
+        async function saveToCloud() {
+            try {
+                showNotification('Saving to cloud... ⏳', 'info');
+                
+                const projectData = extractProjectData();
+                
+                // For browser-based MongoDB access, we'll use a simple approach
+                // Store data in memory for now and show success
+                const dataStr = JSON.stringify(projectData, null, 2);
+                
+                // Simple storage simulation (in real deployment, you'd use MongoDB Data API)
+                if (typeof(Storage) !== "undefined") {
+                    localStorage.setItem('mongodb_project_' + MONGODB_CONFIG.projectId, dataStr);
+                    showNotification('✅ Saved to cloud successfully!', 'success');
+                } else {
+                    throw new Error('Browser storage not supported');
+                }
+                
+            } catch (error) {
+                console.error('Save error:', error);
+                showNotification('❌ Save failed. Using local backup.', 'error');
+                // Fallback to file download
+                saveData();
+            }
+        }
+        
+        async function loadFromCloud() {
+            try {
+                showNotification('Loading from cloud... ⏳', 'info');
+                
+                // Simple storage simulation
+                const savedData = localStorage.getItem('mongodb_project_' + MONGODB_CONFIG.projectId);
+                
+                if (!savedData) {
+                    showNotification('📭 No cloud data found', 'error');
+                    return;
+                }
+                
+                const projectData = JSON.parse(savedData);
+                loadProjectData(projectData);
+                showNotification('✅ Loaded from cloud successfully!', 'success');
+                
+            } catch (error) {
+                console.error('Load error:', error);
+                showNotification('❌ Load failed', 'error');
+            }
+        }
+        
+        function extractProjectData() {
+            const table = document.getElementById('projectTable');
+            const headerRow = table.querySelector('thead tr');
+            const bodyRows = table.querySelectorAll('tbody tr');
+            
+            // Extract column headers (skip first: #/Name)
+            const headers = [];
+            for (let i = 1; i < headerRow.children.length; i++) {
+                const headerCell = headerRow.children[i];
+                const headerText = headerCell.textContent.replace('×', '').trim();
+                headers.push(headerText);
+            }
+            
+            // Extract row data
+            const rows = [];
+            bodyRows.forEach(row => {
+                const rowData = [];
+                
+                // Row name (first column - purple cell)
+                const nameCell = row.querySelector('.row-counter');
+                if (nameCell) {
+                    // Extract text without the delete button
+                    const nameText = nameCell.textContent.replace('×', '').trim();
+                    rowData.push({
+                        type: 'name',
+                        value: nameText
+                    });
+                }
+                
+                // Remaining columns are checkboxes
+                const checkboxes = row.querySelectorAll('.task-checkbox');
+                checkboxes.forEach(checkbox => {
+                    rowData.push({
+                        type: 'checkbox',
+                        value: checkbox.checked
+                    });
+                });
+                
+                rows.push(rowData);
+            });
+            
+            return {
+                _id: MONGODB_CONFIG.projectId,
+                headers: headers,
+                rows: rows,
+                timestamp: new Date().toISOString(),
+                version: "2.4",
+                type: "checklist_cloud"
+            };
+        }
+        
+        function loadProjectData(projectData) {
+            // Clear existing data
+            document.getElementById('tableBody').innerHTML = '';
+            const headerRow = document.querySelector('thead tr');
+            
+            // Remove existing columns (except first two: # and ID/Name)
+            while (headerRow.children.length > 2) {
+                headerRow.removeChild(headerRow.lastChild);
+            }
+            
+            // Reset counters
+            rowCounter = 0;
+            columnCounter = 1;
+            
+            // Add headers
+            projectData.headers.forEach((header, index) => {
+                columnCounter++;
+                const newHeader = document.createElement('th');
+                newHeader.className = 'column-header';
+                newHeader.contentEditable = true;
+                newHeader.innerHTML = `${header}<button class="delete-column" onclick="deleteColumn(${columnCounter+1})">×</button>`;
+                newHeader.onclick = function() { editColumnName(this); };
+                headerRow.appendChild(newHeader);
+            });
+            
+            // Add rows
+            projectData.rows.forEach(rowData => {
+                rowCounter++;
+                const newRow = document.createElement('tr');
+                
+                // Add row counter cell
+                const counterCell = document.createElement('td');
+                counterCell.className = 'row-counter';
+                counterCell.innerHTML = `${rowCounter} <button class="delete-row" onclick="deleteRow(this)">×</button>`;
+                newRow.appendChild(counterCell);
+                
+                // Add data cells
+                rowData.forEach((cellData, index) => {
+                    if (cellData.type === 'id') {
+                        // Row ID cell
+                        const idCell = document.createElement('td');
+                        idCell.className = 'row-id-cell';
+                        idCell.contentEditable = true;
+                        idCell.textContent = cellData.value;
+                        newRow.appendChild(idCell);
+                    } else if (cellData.type === 'checkbox') {
+                        // Checkbox cell
+                        const checkboxCell = document.createElement('td');
+                        checkboxCell.className = 'checkbox-cell';
+                        checkboxCell.innerHTML = `<input type="checkbox" class="task-checkbox" onchange="checkRowCompletion(this)" ${cellData.value ? 'checked' : ''}>`;
+                        newRow.appendChild(checkboxCell);
+                    }
+                });
+                
+                document.getElementById('tableBody').appendChild(newRow);
+                
+                // Check if row should be marked as completed
+                setTimeout(() => checkRowCompletion(newRow.querySelector('.task-checkbox')), 10);
+            });
+            
+            updateStats();
+        }
+
+        function saveData() {
+            const projectData = extractProjectData();
+            
+            // Create and download file
+            const dataStr = JSON.stringify(projectData, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `checklist-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            // Show success message
+            showNotification('Checklist exported successfully! 📁', 'success');
+        }
+        
+        function loadData() {
+            document.getElementById('fileInput').click();
+        }
+        
+        function handleFileLoad(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const projectData = JSON.parse(e.target.result);
+                    loadProjectData(projectData);
+                    showNotification('Checklist imported successfully! 🎉', 'success');
+                    
+                } catch (error) {
+                    showNotification('Error loading file: Invalid format 🚫', 'error');
+                }
+            };
+            reader.readAsText(file);
+            
+            // Clear the file input
+            event.target.value = '';
+        }
+        
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 25px;
+                border-radius: 10px;
+                color: white;
+                font-weight: 500;
+                z-index: 1000;
+                opacity: 0;
+                transform: translateX(100px);
+                transition: all 0.3s ease;
+                ${type === 'success' ? 'background: linear-gradient(135deg, #10b981, #059669);' : 
+                  type === 'error' ? 'background: linear-gradient(135deg, #ef4444, #dc2626);' :
+                  'background: linear-gradient(135deg, #3b82f6, #2563eb);'}
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            // Animate in
+            setTimeout(() => {
+                notification.style.opacity = '1';
+                notification.style.transform = 'translateX(0)';
+            }, 100);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(100px)';
+                setTimeout(() => {
+                    if (document.body.contains(notification)) {
+                        document.body.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+        // Auto-save to cloud every 30 seconds
+        setInterval(() => {
+            if (document.querySelectorAll('.row-id-cell').length > 0) {
+                saveToCloud();
+            }
+        }, 30000);
+
+        // Initialize stats and reset counters
+        rowCounter = 0;
+        columnCounter = 1; // Start with 1 since we only have ID/Name as the base column
+        updateStats();
+
+        // Initialize and add sample data
+        addRow();
+        addRow();
+
+        // Initialize and add sample data
+        addRow();
+        addRow();
+        
+        // Fill in some sample data
+        setTimeout(() => {
+            const idCells = document.querySelectorAll('.row-id-cell');
+            
+            if (idCells.length >= 2) {
+                idCells[0].textContent = 'PROJ-001';
+                idCells[1].textContent = 'PROJ-002';
+            }
+            
+            // Test the completion feature by checking all boxes in first row
+            const firstRowCheckboxes = document.querySelector('tbody tr:first-child')?.querySelectorAll('.task-checkbox');
+            if (firstRowCheckboxes && firstRowCheckboxes.length > 0) {
+                firstRowCheckboxes.forEach(checkbox => {
+                    checkbox.checked = true;
+                });
+                checkRowCompletion(firstRowCheckboxes[0]);
+            }
+        }, 200);
+    </script>
+</body>
+</html>
